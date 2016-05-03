@@ -17,6 +17,22 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 
 var event = new EventEmitter
 
+// for mobile
+app.ws('/mobile', (ws, req) => {
+  let beforeA = 0
+
+  ws.on('message', message => {
+    const data = JSON.parse(message)
+    const a = data.ax * data.ax + data.ay * data.ay + data.az * data.az
+
+    const d = beforeA - a
+    if (d >= 100) {
+      event.emit('shake')
+    }
+    beforeA = a
+  })
+})
+
 // for halake-kit
 app.ws('/kit', (ws, req) => {
   // TODO: below is dummy implementation.
