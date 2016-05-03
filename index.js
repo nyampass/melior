@@ -1,9 +1,13 @@
+'use strict'
+
+const EventEmitter = require('events')
 const path = require('path')
 
+const WebSocket = require('ws')
 const express = require('express')
 const expressWs = require('express-ws')
-const serveStatic = require('serve-static')
 const morgan = require('morgan')
+const serveStatic = require('serve-static')
 
 const app = express()
 
@@ -11,19 +15,41 @@ expressWs(app)
 app.use(morgan('dev'))
 app.use(serveStatic(path.join(__dirname, 'public')))
 
+var event = new EventEmitter
+
+// for halake-kit
 app.ws('/kit', (ws, req) => {
+  // TODO: below is dummy implementation.
+  let beforeA = 0
+
+  ws.on('message', message => {
+    const data = JSON.parse(message.data)
+    const a = data.ax * data.ax + data.ay * data.ay + data.az * data.az
+
+    const d = a - beforeA
+    if (d >= 0.5) {
+      event.emit('shake')
+    }
+
+    a = beforeA
+  })
 })
 
+// for browser
 app.ws('/browser', (ws, req) => {
-  const id = setInterval(() => {
-    ws.send(JSON.stringify({
-      type: 'shake',
-      payload: {},
-    }))
-  }, 1000)
+  const handler = () => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'shake',
+        payload: {},
+      }))
+    }
+  }
+
+  event.on('shake', handler)
 
   ws.on('close', () => {
-    clearInterval(id)
+    event.removeListener('shake', handler)
   })
 })
 
