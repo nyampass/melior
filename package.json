@@ -1,0 +1,10 @@
+{
+  "name": "melior",
+  "private": true,
+  "dependencies": {
+    "express": "^4.13.4",
+    "express-ws": "^2.0.0-rc.1",
+    "morgan": "^1.7.0",
+    "three.js": "^0.73.2"
+  }
+}
