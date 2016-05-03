@@ -102,7 +102,6 @@
         cube.scale.y = Math.random() + 0.5
         cube.scale.z = Math.random() + 0.5
 
-        cube.userData.velocity = new THREE.Vector3()
         cube.userData.velocity.x = Math.random() * 0.02 - 0.01
         cube.userData.velocity.y = Math.random() * 0.02 - 0.01
         cube.userData.velocity.z = Math.random() * 0.02 - 0.01
