@@ -57,7 +57,10 @@ app.ws('/browser', (ws, req) => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: 'shake',
-        payload: {},
+        payload: {
+          // TODO: Of course, below url is dummy.
+          soundUrl: 'http://nyanpass.com/nyanpass.mp3',
+        },
       }))
     }
   }

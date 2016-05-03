@@ -151,7 +151,13 @@
     switch (data.type) {
     case 'shake':
       shakeCount += Math.random() * 5 + 3
+      play(data.payload.soundUrl)
       break
     }
   })
+
+  function play(url) {
+    var audio = new Audio(url)
+    audio.play()
+  }
 })()
