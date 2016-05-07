@@ -10,6 +10,7 @@
   var container
   var camera, scene, renderer
   var room
+  var geometry
 
   init()
   animate()
@@ -34,30 +35,7 @@
     light.position.set(1, 1, 1).normalize()
     scene.add(light)
 
-    var geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
-
-    for (var i = 0; i < 200; i++) {
-      var cube = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}))
-
-      cube.position.x = Math.random() * 4 - 2
-      cube.position.y = Math.random() * 4 - 2
-      cube.position.z = Math.random() * 4 - 2
-
-      cube.rotation.x = Math.random() * 2 * Math.PI
-      cube.rotation.y = Math.random() * 2 * Math.PI
-      cube.rotation.z = Math.random() * 2 * Math.PI
-
-      cube.scale.x = Math.random() + 0.5
-      cube.scale.y = Math.random() + 0.5
-      cube.scale.z = Math.random() + 0.5
-
-      cube.userData.velocity = new THREE.Vector3()
-      cube.userData.velocity.x = Math.random() * 0.01 - 0.005
-      cube.userData.velocity.y = Math.random() * 0.01 - 0.005
-      cube.userData.velocity.z = Math.random() * 0.01 - 0.005
-
-      room.add(cube)
-    }
+    geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
 
     renderer = new THREE.WebGLRenderer({antialias: true})
     renderer.setClearColor(0x101010)
@@ -82,41 +60,28 @@
 
   function render() {
     if (shakes.length > 0) {
-      while (shakes.length > 0) {
-        var data = shakes.pop()
-        var n = data.id - 1
+      var data = shakes.pop()
+      var n = data.id - 1
+      var h = 360 * data.id / 5
 
-        var x = n <= 1 ? n : n - 2.5
-        var y = n <= 1 ? 0.4 : -0.4
-        var z = -(Math.random() + 0.5)
+      var x = n <= 1 ? n : n - 2.5
+      var y = n <= 1 ? 0.4 : -0.4
+      var z = -(Math.random() + 0.5)
 
-        var cube = room.children[0]
-        room.remove(cube)
-
-        cube.position.x = x
-        cube.position.y = y
-        cube.position.z = z
-
-        cube.rotation.x = Math.random() * 2 * Math.PI
-        cube.rotation.y = Math.random() * 2 * Math.PI
-        cube.rotation.z = Math.random() * 2 * Math.PI
-
-        cube.scale.x = Math.random() + 0.5
-        cube.scale.y = Math.random() + 0.5
-        cube.scale.z = Math.random() + 0.5
-
-        cube.userData.velocity.x = Math.random() * 0.02 - 0.01
-        cube.userData.velocity.y = Math.random() * 0.02 - 0.01
-        cube.userData.velocity.z = Math.random() * 0.02 - 0.01
-
-        room.add(cube)
-      }
+      addCube(h, x, y, z)
     }
+
+    var deads = []
 
     for (var i = 0; i < room.children.length; i++) {
       var cube = room.children[i]
 
       cube.userData.velocity.multiplyScalar(0.999)
+      if (cube.userData.velocity.length() <= 0.00001) {
+        deads.push(cube)
+        continue
+      }
+
       cube.position.add(cube.userData.velocity)
 
       if (cube.position.x < -3 || 3 < cube.position.x) {
@@ -139,7 +104,73 @@
       cube.rotation.z += cube.userData.velocity.z * 2
     }
 
+    for (var i = 0; i < deads.length; i++) {
+      room.remove(deads[i])
+    }
+
     renderer.render(scene, camera)
+  }
+
+  function addCube(h, x, y, z) {
+    if (room.children.length >= 300) {
+      room.remove(room.children[0])
+    }
+
+    var cube = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+      color: hsv2rgb(h, 200 + Math.random() * 55, 200 + Math.random() * 55)}))
+
+    cube.position.x = x
+    cube.position.y = y
+    cube.position.z = z
+
+    cube.rotation.x = Math.random() * 2 * Math.PI
+    cube.rotation.y = Math.random() * 2 * Math.PI
+    cube.rotation.z = Math.random() * 2 * Math.PI
+
+    cube.scale.x = Math.random() + 0.5
+    cube.scale.y = Math.random() + 0.5
+    cube.scale.z = Math.random() + 0.5
+
+    cube.userData.velocity = new THREE.Vector3()
+    cube.userData.velocity.x = Math.random() * 0.02 - 0.01
+    cube.userData.velocity.y = Math.random() * 0.02 - 0.01
+    cube.userData.velocity.z = Math.random() * 0.02 - 0.01
+
+    room.add(cube)
+  }
+
+  function hsv2rgb(h, s, v) {
+    var max = v
+    var min = max - ((s / 255) * max)
+
+    var r, g, b
+    if (h < 60) {
+      r = max
+      g = (h / 60) * (max - min) + min
+      b = min
+    } else if (h < 120) {
+      r = ((120 - h) / 60) * (max - min) + min
+      g = max
+      b = min
+    } else if (h < 180) {
+      r = min
+      g = max
+      b = ((h - 120) / 60) * (max - min) + min
+    } else if (h < 240) {
+      r = min
+      g = ((240 - h) / 60) * (max - min) + min
+      b = max
+    } else if (h < 300) {
+      r = ((h - 240) / 60) * (max - min) + min
+      g = min
+      b = max
+    } else {
+      r = max
+      g = min
+      b = ((360 - h) / 60) * (max - min) + min
+    }
+
+    return ~~r * 0x10000 + ~~g * 0x100 + ~~b
   }
 
   // WebSocket
@@ -153,9 +184,11 @@
     case 'shake':
       var count = Math.random() * 5 + 3
       for (var i = 0; i < count; i++) {
-        shakes.push({
-          id: data.payload.id,
-        })
+        setTimeout(function () {
+          shakes.push({
+            id: data.payload.id,
+          })
+        }, i * 100)
       }
       play(data.payload.soundUrl)
       break
