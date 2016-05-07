@@ -17,7 +17,7 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 
 var event = new EventEmitter
 
-app.get('/bang/:id', (req, res) => {
+app.get('/shake/:id', (req, res) => {
   event.emit('shake', {id: parseInt(req.params.id, 10) || 0})
 
   res.status(200).end('ok')
