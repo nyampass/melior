@@ -3,7 +3,7 @@
 
   // shared variable
 
-  var shakeCount = 0
+  var shakes = []
 
   // WebGL (three.js)
 
@@ -81,12 +81,15 @@
   }
 
   function render() {
-    if (shakeCount > 0) {
-      var x = Math.random() - 0.5
-      var y = Math.random() - 0.5
-      var z = -(Math.random() + 0.5)
+    if (shakes.length > 0) {
+      while (shakes.length > 0) {
+        var data = shakes.pop()
+        var n = data.id - 1
 
-      while (shakeCount > 0) {
+        var x = n <= 1 ? n : n - 2.5
+        var y = n <= 1 ? 0.4 : -0.4
+        var z = -(Math.random() + 0.5)
+
         var cube = room.children[0]
         room.remove(cube)
 
@@ -107,8 +110,6 @@
         cube.userData.velocity.z = Math.random() * 0.02 - 0.01
 
         room.add(cube)
-
-        shakeCount -= 1
       }
     }
 
@@ -150,7 +151,12 @@
 
     switch (data.type) {
     case 'shake':
-      shakeCount += Math.random() * 5 + 3
+      var count = Math.random() * 5 + 3
+      for (var i = 0; i < count; i++) {
+        shakes.push({
+          id: data.payload.id,
+        })
+      }
       play(data.payload.soundUrl)
       break
     }
