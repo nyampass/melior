@@ -77,7 +77,7 @@
       var cube = room.children[i]
 
       cube.userData.velocity.multiplyScalar(0.999)
-      if (cube.userData.velocity.length() <= 0.00001) {
+      if (cube.userData.velocity.length() <= 0.001) {
         deads.push(cube)
         continue
       }
