@@ -17,6 +17,12 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 
 var event = new EventEmitter
 
+app.get('/bang/:id', (req, res) => {
+  event.emit('shake', {id: parseInt(req.params.id, 10) || 0})
+
+  res.status(200).end('ok')
+})
+
 // for mobile
 app.ws('/mobile', (ws, req) => {
   let beforeA = 0
@@ -27,7 +33,7 @@ app.ws('/mobile', (ws, req) => {
 
     const d = beforeA - a
     if (d >= 100) {
-      event.emit('shake')
+      event.emit('shake', {id: 1})
     }
     beforeA = a
   })
@@ -44,7 +50,7 @@ app.ws('/kit', (ws, req) => {
 
     const d = a - beforeA
     if (d >= 0.5) {
-      event.emit('shake')
+      event.emit('shake', {id: 1})
     }
 
     a = beforeA
@@ -53,11 +59,12 @@ app.ws('/kit', (ws, req) => {
 
 // for browser
 app.ws('/browser', (ws, req) => {
-  const handler = () => {
+  const handler = (data) => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: 'shake',
         payload: {
+          id: data.id,
           // TODO: Of course, below url is dummy.
           soundUrl: 'http://nyanpass.com/nyanpass.mp3',
         },
