@@ -5,11 +5,8 @@
     "express": "^4.13.4",
     "express-ws": "^2.0.0-rc.1",
     "morgan": "^1.7.0",
-    "three.js": "^0.73.2",
-    "ws": "^1.1.0"
-  },
-  "devDependencies": {
     "serve-static": "^1.10.2",
-    "three": "^0.76.1"
+    "three": "^0.76.1",
+    "ws": "^1.1.0"
   }
 }
