@@ -17,8 +17,17 @@ app.use(serveStatic(path.join(__dirname, 'public')))
 
 var event = new EventEmitter
 
-app.get('/shake/:id', (req, res) => {
-  event.emit('shake', {id: parseInt(req.params.id, 10) || 0})
+const fixAccelValue = (v) => {
+  return (parseFloat(v, 0.0) || 0.0) / 120.0
+}
+
+app.get('/shake/:id/:x/:y/:z', (req, res) => {
+    event.emit('shake', {
+      id: parseInt(req.params.id, 10) || 0,
+      direction_x: fixAccelValue(req.params.x),
+      direction_y: fixAccelValue(req.params.y),
+      direction_z: fixAccelValue(req.params.z),
+    })
 
   res.status(200).end('ok')
 })
@@ -33,7 +42,11 @@ app.ws('/mobile', (ws, req) => {
 
     const d = beforeA - a
     if (d >= 100) {
-      event.emit('shake', {id: 1})
+      event.emit('shake', {id: 1,
+                           direction_x: data.ax / 500.0,
+                           direction_y: data.ay / 500.0,
+                           direction_z: data.az / 500.0
+                          })
     }
     beforeA = a
   })
@@ -60,11 +73,15 @@ app.ws('/kit', (ws, req) => {
 // for browser
 app.ws('/browser', (ws, req) => {
   const handler = (data) => {
+    console.log("shake event")
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: 'shake',
         payload: {
           id: data.id,
+          direction: {x: data.direction_x,
+                      y: data.direction_y,
+                      z: data.direction_z},
           // TODO: Of course, below url is dummy.
           soundUrl: 'http://nyanpass.com/nyanpass.mp3',
         },

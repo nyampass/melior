@@ -11,6 +11,7 @@
   var camera, scene, renderer
   var room
   var geometry
+  var image
 
   init()
   animate()
@@ -30,12 +31,25 @@
     scene.add(room)
 
     scene.add(new THREE.HemisphereLight(0x404020, 0x202040, 0.5))
-    
+
     var light = new THREE.DirectionalLight(0xffffff)
     light.position.set(1, 1, 1).normalize()
     scene.add(light)
 
-    geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
+    // geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
+    geometry = new THREE.SphereGeometry(0.15)
+
+
+    var loader = new THREE.TextureLoader()
+    loader.load(
+	     'images/logo.png',
+	     function ( texture ) {
+        image = new THREE.MeshBasicMaterial({
+          map: texture
+        });
+        image.map.needsUpdate = true
+	     }
+    )
 
     renderer = new THREE.WebGLRenderer({antialias: true})
     renderer.setClearColor(0x101010)
@@ -68,7 +82,9 @@
       var y = n <= 1 ? 0.4 : -0.4
       var z = -(Math.random() + 0.5)
 
-      addCube(h, x, y, z)
+      var d = data.direction
+
+      addCube(h, x, y, z, d)
     }
 
     var deads = []
@@ -111,13 +127,16 @@
     renderer.render(scene, camera)
   }
 
-  function addCube(h, x, y, z) {
-    if (room.children.length >= 300) {
+  function addCube(h, x, y, z, direction) {
+    if (room.children.length >= 200) {
       room.remove(room.children[0])
     }
 
-    var cube = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-      color: hsv2rgb(h, 200 + Math.random() * 55, 200 + Math.random() * 55)}))
+    var cube = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), image);
+    cube.overdraw = true;
+
+    // var cube = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+    //   color: hsv2rgb(h, 200 + Math.random() * 55, 200 + Math.random() * 55)}))
 
     cube.position.x = x
     cube.position.y = y
@@ -130,12 +149,17 @@
     cube.scale.x = Math.random() + 0.5
     cube.scale.y = Math.random() + 0.5
     cube.scale.z = Math.random() + 0.5
-
+    
     cube.userData.velocity = new THREE.Vector3()
-    cube.userData.velocity.x = Math.random() * 0.02 - 0.01
-    cube.userData.velocity.y = Math.random() * 0.02 - 0.01
-    cube.userData.velocity.z = Math.random() * 0.02 - 0.01
 
+    direction = direction || {x: Math.random() * 0.02 - 0.01,
+                              y: Math.random() * 0.02 - 0.01,
+                              z: Math.random() * 0.02 - 0.01}
+
+    cube.userData.velocity.x = direction.x
+    cube.userData.velocity.y = direction.y
+    cube.userData.velocity.z = direction.z
+    
     room.add(cube)
   }
 
@@ -182,11 +206,12 @@
 
     switch (data.type) {
     case 'shake':
-      var count = Math.random() * 5 + 3
+      var count = 1 // Math.random() * 5 + 3
       for (var i = 0; i < count; i++) {
         setTimeout(function () {
           shakes.push({
             id: data.payload.id,
+            direction: data.payload.direction
           })
         }, i * 100)
       }
