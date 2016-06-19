@@ -1,58 +1,80 @@
 (function () {
-  'use strict'
+    'use strict'
+    
+    // shared variable
+    
+    var shakes = []
+    
+    // WebGL (three.js)
+    
+    var container
+    var camera, scene, renderer
+    var room
+    var boxGeometry, sphereGeometry
+    var instruments
+    var image
+    
+    init()
+    animate()
+    
+    function init() {
+	container = document.createElement('div')
+	document.body.appendChild(container)
+	
+	scene = new THREE.Scene()
+	
+	camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 10)
+	scene.add(camera)
+	
+	room = new THREE.Mesh(
+	    new THREE.BoxGeometry(6, 6, 6, 10, 10, 10),
+	    new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: false}))
+	scene.add(room)
+	
+	scene.add(new THREE.HemisphereLight(0x404020, 0x202040, 0.5))
+	
+	var light = new THREE.DirectionalLight(0xffffff)
+	light.position.set(1, 1, 1).normalize()
+	scene.add(light)
+	
+	boxGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
+	sphereGeometry = new THREE.SphereGeometry(0.15)
+	
+	
+	var loader = new THREE.TextureLoader()
+	loader.load(
+	    'images/logo.png',
+	    function ( texture ) {
+		image = new THREE.MeshBasicMaterial({
+		    transparent: true,
+		    map: texture
+		});
+		image.map.needsUpdate = true
+	    }
+	)
 
-  // shared variable
+	instruments = {}
 
-  var shakes = []
-
-  // WebGL (three.js)
-
-  var container
-  var camera, scene, renderer
-  var room
-  var boxGeometry, sphereGeometry
-  var image
-
-  init()
-  animate()
-
-  function init() {
-    container = document.createElement('div')
-    document.body.appendChild(container)
-
-    scene = new THREE.Scene()
-
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 10)
-    scene.add(camera)
-
-    room = new THREE.Mesh(
-      new THREE.BoxGeometry(6, 6, 6, 10, 10, 10),
-      new THREE.MeshBasicMaterial({color: 0x202020, wireframe: true}))
-    scene.add(room)
-
-    scene.add(new THREE.HemisphereLight(0x404020, 0x202040, 0.5))
-
-    var light = new THREE.DirectionalLight(0xffffff)
-    light.position.set(1, 1, 1).normalize()
-    scene.add(light)
-
-    boxGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.15)
-    sphereGeometry = new THREE.SphereGeometry(0.15)
-
-
-    var loader = new THREE.TextureLoader()
-    loader.load(
-	'images/logo.png',
-	function ( texture ) {
-            image = new THREE.MeshBasicMaterial({
-		map: texture
-            });
-            image.map.needsUpdate = true
+	function loadFunc(key) {
+	    return function( texture ) {
+		var image = new THREE.MeshBasicMaterial({
+		    transparent: true,
+		    map: texture
+		});
+		image.map.needsUpdate = true
+		instruments[key] = image;
+	    }
 	}
-    )
 
-    renderer = new THREE.WebGLRenderer({antialias: true})
-    renderer.setClearColor(0x101010)
+	loader.load('images/rappa.png', loadFunc("rappa"))
+	loader.load('images/taiko.png', loadFunc("taiko"))
+	loader.load('images/guitar.png', loadFunc("guitar"))
+	loader.load('images/mokkin.png', loadFunc("mokkin"))
+	loader.load('images/piano.png', loadFunc("piano"))
+	loader.load('images/tanbarin.png', loadFunc("tanbarin"))
+
+	renderer = new THREE.WebGLRenderer({antialias: true, alpha: true})
+    renderer.setClearColor(0xffffff)
     renderer.setPixelRatio(window.devicePixelRatio)
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.sortObjects = false
@@ -116,9 +138,9 @@
         cube.userData.velocity.z *= -1
       }
 
-      cube.rotation.x += cube.userData.velocity.x * 2
-      cube.rotation.y += cube.userData.velocity.y * 2
-      cube.rotation.z += cube.userData.velocity.z * 2
+      // cube.rotation.x += cube.userData.velocity.x * 2
+      // cube.rotation.y += cube.userData.velocity.y * 2
+      // cube.rotation.z += cube.userData.velocity.z * 2
     }
 
     for (var i = 0; i < deads.length; i++) {
@@ -134,7 +156,19 @@
     }
 
     var cube
-    if (type == 'halake') {
+    if (type == 'random') {
+	var key;
+	switch (parseInt(Math.random() * 6)) {
+	case 0: key = "rappa"; break;
+	case 1: key = "guitar"; break;
+	case 2: key = "piano"; break;
+	case 3: key = "mokkin"; break;
+	case 4: key = "taiko"; break;
+	default: key = "tanbarin"
+	}
+        cube = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), instruments[key]);
+      cube.overdraw = true;
+    } else if (type == 'halake') {
         cube = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), image);
       cube.overdraw = true;
     } else if (type == 'cube') {
@@ -149,19 +183,21 @@
     cube.position.y = y
     cube.position.z = z
 
-    cube.rotation.x = Math.random() * 2 * Math.PI
-    cube.rotation.y = Math.random() * 2 * Math.PI
-    cube.rotation.z = Math.random() * 2 * Math.PI
+    cube.rotation.x = 0 // Math.random() * 2 * Math.PI
+    cube.rotation.y = 0 // Math.random() * 2 * Math.PI
+    cube.rotation.z = 0 // Math.random() * 2 * Math.PI
 
-    cube.scale.x = Math.random() + 0.5
-    cube.scale.y = Math.random() + 0.5
-    cube.scale.z = Math.random() + 0.5
+    var scale = Math.random() * 2.0 + 2.5
+    cube.scale.x = scale
+    cube.scale.y = scale
+    cube.scale.z = scale
 
     cube.userData.velocity = new THREE.Vector3()
 
-    direction = direction || {x: Math.random() * 0.02 - 0.01,
-                              y: Math.random() * 0.02 - 0.01,
-                              z: Math.random() * 0.02 - 0.01}
+      direction = direction || {x: Math.random() * 0.02 - 0.01,
+				y: Math.random() * 0.02 - 0.01,
+                              z: 0 // Math.random() * 0.02 - 0.01
+			     }
 
     cube.userData.velocity.x = direction.x
     cube.userData.velocity.y = direction.y
@@ -213,7 +249,7 @@
 
     switch (data.type) {
     case 'shake':
-      var count = Math.random() * 5 + 3
+      var count = 1 // Math.random() * 5 + 3
       for (var i = 0; i < count; i++) {
         setTimeout(function () {
           shakes.push({
