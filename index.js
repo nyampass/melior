@@ -21,12 +21,24 @@ const fixAccelValue = (v) => {
   return (parseFloat(v, 0.0) || 0.0) / 120.0
 }
 
-app.get('/shake/:id/:x/:y/:z', (req, res) => {
+app.get('/shake/:id/:type', (req, res) => {
     event.emit('shake', {
       id: parseInt(req.params.id, 10) || 0,
-      direction_x: fixAccelValue(req.params.x),
-      direction_y: fixAccelValue(req.params.y),
-      direction_z: fixAccelValue(req.params.z),
+      type: req.params.type
+    })
+
+  res.status(200).end('ok')
+})
+
+app.get('/shake/:id/:type/:x/:y/:z', (req, res) => {
+    event.emit('shake', {
+      id: parseInt(req.params.id, 10) || 0,
+      direction: {
+        x: fixAccelValue(req.params.x),
+        y: fixAccelValue(req.params.y),
+        z: fixAccelValue(req.params.z)
+      },
+      type: req.params.type
     })
 
   res.status(200).end('ok')
@@ -79,12 +91,10 @@ app.ws('/browser', (ws, req) => {
         type: 'shake',
         payload: {
           id: data.id,
-          direction: {x: data.direction_x,
-                      y: data.direction_y,
-                      z: data.direction_z},
-          // TODO: Of course, below url is dummy.
-          soundUrl: 'http://nyanpass.com/nyanpass.mp3',
-        },
+          direction: data.direction,
+          type: data.type,
+	  // soundUrl: 'http://nyanpass.com/nyanpass.mp3'
+        }
       }))
     }
   }
